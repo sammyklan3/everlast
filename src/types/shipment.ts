@@ -8,7 +8,15 @@ export type Shipment = {
   portOfEntryId: string | null;
   weight: number;
   weightUnit: "kg" | "lb" | string;
-  status: "pending" | "in_transit" | "delivered" | "cancelled" | string;
+  status:
+    | "pending"
+    | "in_transit"
+    | "at_port"
+    | "clearing"
+    | "cleared"
+    | "delivered"
+    | "cancelled"
+    | string;
   clientId: string;
   transitType: "domestic" | "transit" | "export" | string;
   borderExitPoint: string | null;
@@ -18,6 +26,7 @@ export type Shipment = {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+
   client: {
     id: string;
     name: string;
@@ -29,7 +38,19 @@ export type Shipment = {
     createdAt: string;
     updatedAt: string;
   };
-  agent: any | null;
+
+  agent: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    role: "staff" | string;
+    status: "active" | "inactive" | string;
+    last_login: string | null;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+
   shippingCompany: {
     id: string;
     name: string;
@@ -41,5 +62,20 @@ export type Shipment = {
     createdAt: string;
     updatedAt: string;
   };
-  entryPort: any | null; // Replace `any` when the structure of entryPort is known
+
+  invoice: {
+    id: string;
+    shipmentId: string;
+    issuedTo: string;
+    amount: string;
+    currency: string;
+    status: "paid" | "unpaid" | "partial" | string;
+    dueDate: string;
+    paidAt: string | null;
+    notes: string | null;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+
+  entryPort: any | null; // Placeholder — update this once the entry port object structure is known
 };

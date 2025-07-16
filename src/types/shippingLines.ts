@@ -5,9 +5,9 @@ export type ContactInfo = {
 };
 
 export type ShippingCompany = {
-  id: string;
+  id?: string;
   name: string;
   contactInfo: ContactInfo;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 };

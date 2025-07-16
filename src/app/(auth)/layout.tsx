@@ -20,7 +20,7 @@ export default function AuthLayout({
       } else if (user?.role === "staff") {
         router.push("/staff");
       } else {
-        router.push("/");
+        router.push("/client");
       }
     }
   }, [isAuthenticated, loading, user]);

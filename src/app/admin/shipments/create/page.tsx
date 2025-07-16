@@ -119,7 +119,9 @@ const CreateShipment: React.FC = () => {
         body: JSON.stringify(formData),
       });
 
-      if (!res.ok) throw new Error("Failed to create shipment");
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Failed to create shipment");
       toast.success("Shipment created successfully");
       router.push("/admin/shipments");
     } catch (err: any) {

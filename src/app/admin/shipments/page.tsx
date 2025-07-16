@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Mail, Phone, Truck, Info, MapPin } from "lucide-react";
 import { Shipment } from "@/types/shipment";
+import { ShipmentCard } from "@/components/ShipmentCard";
 
 const Shipments: React.FC = () => {
   const { accessToken } = useAuth();
@@ -150,66 +151,7 @@ const Shipments: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {shipments.map((shipment) => (
-            <Link key={shipment.id} href={`/admin/shipments/${shipment.id}`}>
-              <Card className="hover:shadow-md transition">
-                <CardHeader>
-                  <CardTitle className="text-base">
-                    {shipment.trackingNumber}
-                  </CardTitle>
-                  <CardDescription className="flex gap-2 items-center mt-2">
-                    {getStatusBadge(shipment.status)}
-                    <span className="text-xs text-muted-foreground capitalize">
-                      {shipment.transitType}
-                    </span>
-                  </CardDescription>
-                </CardHeader>
-
-                <Separator />
-
-                <CardContent className="space-y-3 pt-4 text-sm">
-                  <div className="text-muted-foreground">
-                    {shipment.description ?? "No description"}
-                  </div>
-
-                  <div className="flex gap-1 items-center text-muted-foreground">
-                    <MapPin className="w-4 h-4" />
-                    <span>
-                      {shipment.origin} → {shipment.destination}
-                    </span>
-                  </div>
-
-                  <div className="text-muted-foreground">
-                    Weight: {shipment.weight} {shipment.weightUnit}
-                  </div>
-
-                  {shipment.notes && (
-                    <div className="flex gap-1 items-start">
-                      <Info className="w-4 h-4 mt-0.5 text-muted-foreground" />
-                      <span className="text-muted-foreground">
-                        {shipment.notes}
-                      </span>
-                    </div>
-                  )}
-
-                  <Separator />
-
-                  <div className="space-y-1">
-                    <div className="font-medium">{shipment.client.name}</div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Mail className="w-4 h-4" /> {shipment.client.email}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone className="w-4 h-4" /> {shipment.client.phone}
-                    </div>
-                  </div>
-
-                  <div className="pt-2 text-xs text-muted-foreground">
-                    Shipping via{" "}
-                    <strong>{shipment.shippingCompany.name}</strong>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+            <ShipmentCard key={shipment.id} shipment={shipment} />
           ))}
         </div>
       )}
