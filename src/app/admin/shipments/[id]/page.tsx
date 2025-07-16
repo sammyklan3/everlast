@@ -11,6 +11,27 @@ import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
 import { Shipment } from "@/types/shipment";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const ShipmentPage: React.FC<Shipment> = () => {
   const router = useRouter();
@@ -20,7 +41,12 @@ const ShipmentPage: React.FC<Shipment> = () => {
   const [shipment, setShipment] = useState<Shipment | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("KSH");
+  const [dueDate, setDueDate] = useState<Date | undefined>();
+  const [localNotes, setLocalNotes] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -41,17 +67,49 @@ const ShipmentPage: React.FC<Shipment> = () => {
 
       setShipment(data);
     } catch (error: any) {
-      setError(error.message || "An error occurred.");
+      toast.error(error.message || "Failed to fetch shipment");
+      console.error("Error fetching shipment:", error);
     } finally {
       setLoading(false);
     }
   }
 
+  const handleCreateInvoice = async () => {
+    setCreating(true);
+    try {
+      const res = await fetch(`${API_URL}/invoices`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          shipmentId: shipment?.id,
+          amount,
+          currency,
+          dueDate,
+          notes,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create invoice");
+
+      setOpen(false);
+      fetchShipment(); // Refresh shipment to reflect invoice
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create invoice");
+      console.error("Error creating invoice:", err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
   useEffect(() => {
     if (accessToken && id) {
       fetchShipment();
     } else {
-      setError("Access token or shipment ID is missing");
+      toast.error("Access token or shipment ID is missing");
       setLoading(false);
     }
   }, [accessToken, id]);
@@ -87,13 +145,6 @@ const ShipmentPage: React.FC<Shipment> = () => {
 
   if (loading)
     return <Loader message="Loading shipment details..." fullScreen />;
-  if (error)
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
-        <h2 className="text-xl font-semibold text-red-600">Error</h2>
-        <p className="mt-2 text-muted-foreground">{error}</p>
-      </div>
-    );
 
   if (!shipment)
     return (
@@ -225,6 +276,92 @@ const ShipmentPage: React.FC<Shipment> = () => {
           </div>
         </CardContent>
       </Card>
+      {shipment.invoice ? (
+        <div className="flex justify-end">
+          <Button asChild>
+            <a href={`/admin/invoices/${shipment.invoice.id}`}>View Invoice</a>
+          </Button>
+        </div>
+      ) : (
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button>Create Invoice</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create Invoice</DialogTitle>
+            </DialogHeader>
+
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Amount</Label>
+                <Input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Enter amount"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Currency</Label>
+                <select
+                  className="w-full border border-border rounded-md p-2 text-sm bg-background text-foreground"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                >
+                  <option value="KSH">KSH</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Due Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dueDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dueDate ? format(dueDate, "PPP") : "Pick a due date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dueDate}
+                      onSelect={setDueDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Notes (optional)</Label>
+                <Textarea
+                  value={localNotes}
+                  onChange={(e) => setLocalNotes(e.target.value)}
+                  placeholder="Additional notes"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                onClick={handleCreateInvoice}
+                disabled={creating || !amount || !dueDate}
+              >
+                {creating ? "Creating..." : "Create Invoice"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       {["pending", "cancelled"].includes(status) && (
         <div className="flex justify-end gap-4">
           <Button

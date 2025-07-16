@@ -5,17 +5,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { Loader } from "@/components/Loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Building2, Mail, Phone, MapPin } from "lucide-react";
 import { ShippingCompany } from "@/types/shippingLines";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 const ShippingLines: React.FC = () => {
   const { accessToken } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [companies, setCompanies] = useState<ShippingCompany[]>([]);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -39,7 +38,7 @@ const ShippingLines: React.FC = () => {
       setCompanies(data || []);
     } catch (error: any) {
       console.error("Error fetching shipping lines:", error);
-      setError(error.message || "An error occurred.");
+      toast.error(error.message || "An error occurred.");
     } finally {
       setLoading(false);
     }
@@ -49,7 +48,7 @@ const ShippingLines: React.FC = () => {
     if (accessToken) {
       fetchShippingLines();
     } else {
-      setError("Access token is missing");
+      toast.error("Access token is missing");
       setLoading(false);
     }
   }, [accessToken]);
@@ -57,18 +56,6 @@ const ShippingLines: React.FC = () => {
   if (loading) {
     return <Loader message="Loading shipping lines..." fullScreen />;
   }
-
-  if (error) {
-    return (
-      <div className="max-w-2xl mx-auto mt-10">
-        <Alert variant="destructive">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   return (
     <div className="px-4 md:px-8 py-10">
       <div className="flex justify-between items-center mb-6">

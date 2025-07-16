@@ -16,6 +16,7 @@ import {
   Users,
   PackageSearch,
   LogOut,
+  FileText,
   ShipIcon,
   Menu,
   X,
@@ -44,6 +45,7 @@ export default function NavBar() {
         icon: PackageSearch,
       },
       { label: "Users", href: "/admin/users", icon: Users },
+      { label: "Invoices", href: "/admin/invoices", icon: FileText },
     ],
     staff: [
       { label: "Shipments", href: "/staff/shipments", icon: PackageSearch },
